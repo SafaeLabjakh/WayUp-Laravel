@@ -25,4 +25,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Formation::class, 'userId');
     }
+    public function skills()
+    {
+        return $this->hasMany(Skill::class);
+       
+    }
 }
