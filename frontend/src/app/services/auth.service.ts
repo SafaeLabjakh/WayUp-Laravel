@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -7,21 +7,30 @@ import { Observable } from 'rxjs';
 })
 export class AuthService {
 
-  private apiUrl = 'http://localhost:8080';
+  // Change le port et URL selon ta config Laravel, exemple souvent c'est 8000 en local
+  private apiUrl = 'http://localhost:8000/api'; 
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient) {}
 
-  }
   login(email: string, password: string): Observable<any> {
-    const loginData = { email, password }; 
-    console.log(loginData);
-    return this.http.post(`${this.apiUrl}/login`, loginData, { headers: { 'Content-Type': 'application/json' },  responseType: 'json' });
+    const loginData = { email, password };
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post(`${this.apiUrl}/login`, loginData, { headers, responseType: 'json' });
   }
 
   registerUser(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, userData,{ responseType: 'text' as 'json' });
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post(`${this.apiUrl}/register`, userData, { headers, responseType: 'text' as 'json' });
   }
-  getToken() {
+
+  getToken(): string | null {
     return localStorage.getItem('authToken');
   }
 }
