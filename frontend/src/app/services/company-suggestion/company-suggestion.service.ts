@@ -12,21 +12,35 @@ export class CompanySuggestionService {
 
   constructor(private http: HttpClient) { }
 
- getSuggestions(metier: string): Observable<CompanySuggestion[]> {
+  getSuggestions(metier: string): Observable<CompanySuggestion[]> {
   const body = { metier };
 
   return this.http.post<any>(this.baseUrl, body).pipe(
-    // On transforme la réponse
     map(response => {
-      const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
+      const rawText = response?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-      // Retirer les ```json ... ``` si présents
-      const cleanedText = text?.replace(/```json\n?/, '').replace(/```/, '');
+      if (!rawText) {
+        throw new Error("La réponse ne contient pas de texte.");
+      }
 
-      return JSON.parse(cleanedText) as CompanySuggestion[];
+      console.log("Raw API response text:", rawText);
+
+      // Extraire uniquement la partie JSON dans le bloc markdown
+const jsonMatch = rawText.match(/```json\s*([\s\S]*?)\s*```/i);
+      if (!jsonMatch || jsonMatch.length < 2) {
+        throw new Error("Impossible d'extraire le JSON du texte.");
+      }
+
+      const jsonText = jsonMatch[1].trim();
+
+      try {
+        return JSON.parse(jsonText) as CompanySuggestion[];
+      } catch (error) {
+        console.error("Erreur lors du parsing JSON :", error);
+        throw new Error("Le contenu retourné n'est pas un JSON valide.");
+      }
     })
   );
 }
 
 }
-

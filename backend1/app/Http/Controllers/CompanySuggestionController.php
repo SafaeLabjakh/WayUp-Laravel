@@ -1,23 +1,27 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
-
 class CompanySuggestionController extends Controller
 {
- public function fetchCompanies(string $jobTitle): string
+    public function fetchCompanies(string $jobTitle): string
     {
         $apiKey = env('GEMINI_API_KEY');
 
-        $question = "Liste les entreprises pertinentes pour le métier '$jobTitle' en JSON avec 'name' et 'url'.";
+        // Le prompt que tu veux envoyer à Gemini, avec String.format-like en PHP
+        $prompt = sprintf(
+            "List 9 companies hiring for the role of %s in Morocco.\nReturn ONLY a JSON array in this exact format:\n[\n  {\n    \"id\": 1,\n    \"name\": \"Company Name\",\n    \"description\": \"Brief company description\",\n    \"industry\": \"Industry sector\",\n    \"location\": \"City, Morocco\",\n    \"size\": \"Number of employees range\",\n    \"foundedYear\": 2020\n  },\n  ...\n]\nDo not return markdown or a single object. Return ONLY a pure JSON array.",
+            $jobTitle
+        );
 
         $requestBody = [
             "contents" => [
                 [
                     "parts" => [
-                        ["text" => $question]
+                        ["text" => $prompt]
                     ]
                 ]
             ]
@@ -45,7 +49,7 @@ class CompanySuggestionController extends Controller
         try {
             $jsonResponse = $this->fetchCompanies($jobTitle);
 
-            // Tu peux parser ici ou retourner direct le JSON brut selon ta logique
+            // Ici tu retournes directement la réponse JSON brute
             return response($jsonResponse, 200)->header('Content-Type', 'application/json');
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);

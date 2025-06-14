@@ -7,6 +7,7 @@ use App\Http\Controllers\SkillController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\CompanySuggestionController;
+use App\Http\Controllers\InternshipSuggestionController;
 
 Route::post('/getFormations/{userId}', [FormationController::class, 'getFormations']);
 Route::get('/formations/{userId}', [FormationController::class, 'getUserFormations']);
@@ -28,3 +29,6 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/questions', [TestController::class, 'getAllQuestions']);
 Route::post('/companies/suggestions', [CompanySuggestionController::class, 'suggestedCompanies']);
+
+
+Route::middleware('auth:sanctum')->get('/internships/me', [InternshipSuggestionController::class, 'getInternshipsForAuthenticatedUser']);
