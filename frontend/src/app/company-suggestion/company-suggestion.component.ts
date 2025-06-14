@@ -20,20 +20,26 @@ export class CompanySuggestionComponent implements OnInit
   userId!: number;
 
   ngOnInit() {
-    const userData = localStorage.getItem('user');
-   if (userData) {
-      const parsedUser = JSON.parse(userData);
-      this.userId = parsedUser.id;
-      this.service.getSuggestions(this.userId).subscribe({
-        next: (data) => (this.companies = data),
+  const userData = localStorage.getItem('user');
+  if (userData) {
+    const parsedUser = JSON.parse(userData);
+    this.userId = parsedUser.id;
+
+    const metier = parsedUser.metierSugg || null;
+
+    if (metier) {
+      this.service.getSuggestions(metier).subscribe({
+        next: (data) => {
+          this.companies = data;
+          console.log("data", this.companies);
+        },
         error: (err) => console.error('Error fetching companies', err),
       });
     } else {
-      console.error('No user data found in localStorage');
+      console.error('No metierSugg found in user data');
     }
-    }
+
+  } else {
+    console.error('No user data found in localStorage');
   }
-
- 
-
-
+}}

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { CompanySuggestion } from '../../models/company-suggestion';
 
 @Injectable({
@@ -8,12 +8,25 @@ import { CompanySuggestion } from '../../models/company-suggestion';
 })
 export class CompanySuggestionService {
 
-   private baseUrl = 'http://localhost:8080/api';
+  private baseUrl = 'http://127.0.0.1:8000/api/companies/suggestions';
 
   constructor(private http: HttpClient) { }
 
-  getSuggestions(userId: number): Observable<CompanySuggestion[]> {
-    const url = `${this.baseUrl}/${userId}/suggested-companies`;
-    return this.http.get<CompanySuggestion[]>(url);
-  }
+ getSuggestions(metier: string): Observable<CompanySuggestion[]> {
+  const body = { metier };
+
+  return this.http.post<any>(this.baseUrl, body).pipe(
+    // On transforme la réponse
+    map(response => {
+      const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      // Retirer les ```json ... ``` si présents
+      const cleanedText = text?.replace(/```json\n?/, '').replace(/```/, '');
+
+      return JSON.parse(cleanedText) as CompanySuggestion[];
+    })
+  );
 }
+
+}
+

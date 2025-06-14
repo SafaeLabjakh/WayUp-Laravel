@@ -26,7 +26,7 @@ public function getFormations($userId, Request $request)
     $question = "Quelles sont les technologies essentielles pour devenir $metier ? "
         . "Merci de répondre uniquement avec un tableau JSON listant ces technologies, "
         . "chaque élément contenant deux champs : 'name' (nom de la technologie, ex. CSS, HTML, Git) "
-        . "et 'url' (lien vers une ressource d'apprentissage). Ne donne pas d'autres informations.";
+        . "et 'url' (lien vers une ressource d'apprentissage). Ne donne pas d'autres informations. donne moi 15 formation.";
 
             $requestBody = [
                 "contents" => [

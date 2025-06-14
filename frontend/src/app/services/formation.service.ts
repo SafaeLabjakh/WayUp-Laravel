@@ -7,8 +7,8 @@ import { Observable } from 'rxjs';
 })
 export class FormationService {
 
-  private apiUrl = 'http://localhost:8080/api/getFormations';
-  private userFormationsUrl = 'http://localhost:8080/api/getUserFormations';
+  private apiUrl = 'http://localhost:8000/api/getFormations';
+  private userFormationsUrl = 'http://localhost:8000/api/formations';
 
   constructor(private http: HttpClient) {}
 
@@ -45,7 +45,7 @@ getUserFormations(userId: number): Observable<any> {
   });
 
   // Construire l'URL avec l'ID utilisateur
-  const url = `http://localhost:8080/api/userFormations/${userId}`;
+  const url = `http://localhost:8000/api/formations/${userId}`;
 
   // Effectuer la requête GET avec l'URL et les en-têtes
   return this.http.get<any>(url, { headers });
