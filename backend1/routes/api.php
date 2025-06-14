@@ -6,6 +6,7 @@ use App\Http\Controllers\MetierController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\CompanySuggestionController;
 
 Route::post('/getFormations/{userId}', [FormationController::class, 'getFormations']);
 Route::get('/formations/{userId}', [FormationController::class, 'getUserFormations']);
@@ -16,3 +17,4 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/questions', [TestController::class, 'getAllQuestions']);
+Route::post('/companies/suggestions', [CompanySuggestionController::class, 'suggestedCompanies']);
