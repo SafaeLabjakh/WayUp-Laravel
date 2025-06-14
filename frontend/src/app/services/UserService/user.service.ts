@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class UserService {
 
-  private baseUrl = 'http://localhost:8080/api';
+  private baseUrl = 'http://localhost:8000/api';  // <- mettre 8000 ici
 
   constructor(private http: HttpClient) {}
 
@@ -17,13 +17,13 @@ export class UserService {
     return this.http.get<any[]>(`${this.baseUrl}/skills/${userId}`, { headers });
   }
 
-updateSkill(skillId: number, updated: any): Observable<any> {
+  updateSkill(skillId: number, updated: any): Observable<any> {
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     return this.http.put(`${this.baseUrl}/skills/${skillId}`, updated, { headers });
   }
-getUserById(userId: number): Observable<any> {
-  return this.http.get<any>(`http://localhost:8080/api/users/${userId}`);
-}
 
+  getUserById(userId: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/users/${userId}`); // utiliser baseUrl ici aussi
+  }
 }
