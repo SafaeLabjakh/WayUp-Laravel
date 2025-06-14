@@ -9,10 +9,10 @@ class Formation extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['formationName', 'url', 'userId'];
+protected $fillable = ['formationName', 'url', 'user_id'];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'userId');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

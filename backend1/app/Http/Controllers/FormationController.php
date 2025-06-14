@@ -15,67 +15,107 @@ class FormationController extends Controller
         $this->apiKey = env('GEMINI_API_KEY');
     }
 
- public function getFormations(Request $request)
-{
-    $userId = $request->input('userId');
-    $metier = $request->input('metier');
+public function getFormations($userId, Request $request)
+    {
+        try {
+            // Récupère le contenu brut de la requête (par exemple : "développeur web")
+            $metier = $request->getContent();
 
-    if (!$userId) {
-        return response()->json(['status' => 'error', 'message' => 'Le champ "userId" est requis.'], 400);
-    }
+            $apiKey = env('GEMINI_API_KEY'); // Clé API Gemini dans .env
 
-    if (!$metier) {
-        return response()->json(['status' => 'error', 'message' => 'Le champ "metier" est requis.'], 400);
-    }
+    $question = "Quelles sont les technologies essentielles pour devenir $metier ? "
+        . "Merci de répondre uniquement avec un tableau JSON listant ces technologies, "
+        . "chaque élément contenant deux champs : 'name' (nom de la technologie, ex. CSS, HTML, Git) "
+        . "et 'url' (lien vers une ressource d'apprentissage). Ne donne pas d'autres informations.";
 
-    $question = "Quelles sont les technologies et compétences nécessaires pour devenir $metier au niveau d'etude ? Merci de répondre sous forme de JSON avec les champs 'name' pour le nom de la technologie/compétence et 'url' pour le lien vers la ressource d'apprentissage.";
-
-    $body = [
-        "contents" => [
-            [
-                "parts" => [
-                    ["text" => $question]
+            $requestBody = [
+                "contents" => [
+                    [
+                        "parts" => [
+                            ["text" => $question]
+                        ]
+                    ]
                 ]
-            ]
-        ]
-    ];
+            ];
 
-    $response = Http::withHeaders([
-        'Content-Type' => 'application/json'
-    ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$this->apiKey}", $body);
+            // Appel HTTP à l'API Gemini
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey", $requestBody);
 
-    if (!$response->ok()) {
+            if (!$response->ok()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Erreur lors de l’appel à l’API Gemini.'
+                ], $response->status());
+            }
+
+            $data = $response->json();
+
+            // Extraction du texte JSON dans la réponse
+            $jsonText = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+
+            if (!$jsonText) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Aucune formation trouvée dans la réponse de l’API.'
+                ], 404);
+            }
+
+      $cleanJson = trim(str_replace(["```json", "```"], '', $jsonText));
+
+        // Décoder JSON (parfois JSON peut être double-encodé)
+        $formations = json_decode($cleanJson, true);
+        if (is_string($formations)) {
+            $formations = json_decode($formations, true);
+        }
+
+        if (!is_array($formations)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Format JSON reçu invalide.'
+            ], 400);
+        }
+
+        // Valider la structure : tableau simple avec objets contenant 'name' et 'url'
+        foreach ($formations as $formation) {
+            if (!isset($formation['name']) || !isset($formation['url'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Les formations doivent contenir les champs "name" et "url".'
+                ], 400);
+            }
+        }
+
+        // Vérifier que l'utilisateur existe
+        $user = User::find($userId);
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Utilisateur non trouvé.'
+            ], 404);
+        }
+
+        // Insertion en base
+        foreach ($formations as $formationData) {
+            Formation::create([
+                'formationName' => $formationData['name'],
+                'url' => $formationData['url'],
+                'user_id' => $userId,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Formations enregistrées avec succès.',
+            'data' => $formations,
+        ]);
+    } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
-            'message' => 'Erreur lors de l\'appel à l\'API Gemini.'
-        ], $response->status());
-    }
-
-    $data = $response->json();
-    $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
-    $cleanJson = trim(str_replace(["```json", "```"], '', $text));
-    $formations = json_decode($cleanJson, true);
-
-    if (!is_array($formations)) {
-        return response()->json(['status' => 'error', 'message' => 'Format de réponse inattendu.'], 400);
-    }
-
-    $user = User::find($userId);
-    if (!$user) {
-        return response()->json(['status' => 'error', 'message' => 'Utilisateur non trouvé.'], 404);
-    }
-
-    foreach ($formations as $formationData) {
-        Formation::create([
-            'formationName' => $formationData['name'] ?? '',
-            'url' => $formationData['url'] ?? '',
-            'userId' => $user->id
-        ]);
-    }
-
-    return response()->json(['status' => 'success', 'message' => 'Formations enregistrées avec succès.']);
-}
-
+            'message' => 'Erreur : ' . $e->getMessage()
+        ], 500);
+    }}
     public function getUserFormations($userId)
     {
         $user = User::find($userId);
